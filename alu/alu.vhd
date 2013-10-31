@@ -81,59 +81,111 @@ architecture behavioral of alu is
 	end function;  
 
 begin
-
-  -- calculation of the actual shift value depends on  shiftCntSrc
+	-- calculation of the actual shift value depends on  shiftCntSrc
 	cnt_i <= to_integer(unsigned(b (4 downto 0)))  when (shiftCntSrc = '1')   else
 		 to_integer(unsigned(shiftCnt));
 
-  -- Perform the actual computations for ovf and result_i depending on the value of sel, a,b and cnt_i
-  -- add the sensitivity list    
-	computation: process (........)
+	-- Perform the actual computations for ovf and result_i depending on the value of sel, a,b and cnt_i
+	computation: process (a,b,sel,shiftCnt,shiftCntSrc)
 		variable result_v : std_logic_vector(result'range);  -- assign the result first to a variable (= immediate assignment)
 								     -- because the result will also be needed to calculate
 								     -- the overflow flag.
 	begin
-    -- add default values for result_i and ovf
-    -- add code here
+		-- add default values for result_i and ovf
+		result_i <= std_logic_vector(to_unsigned(0,DATA_WIDTH));
+		ovf <= '0';
 
 		case sel is
 			when ADD_OP =>
-      -- calculate result_v
-      -- add code here
+				result_v := std_logic_vector(signed(a) + signed(b));
 
-
-      -- calculate ovf
-      -- add code here
-
+				-- Si sumo a un positivo un positivo y me sale negativo => overflow
+				-- Si sumo a un negativo un negativo y me sale positivo => overflow
+				if a(a'high) = b(b'high-1) and result_v(result_v'high) /= a(a'high) then
+					ovf <= '1';
+				end if;
 
 			when SUB_OP => 
-      -- add code here
+				result_v := std_logic_vector(signed(a) - signed(b));
+				-- Si resto a un positivo un negativo y me sale negativo => overflow
+				-- Si resto a un negativo un positivo y me sale positivo => overflow
+				if a(a'high) /= b(b'high-1) and result_v(result_v'high) = b(b'high) then
+					ovf <= '1';
+				end if;
 
 			when MULT_OP =>
-      -- add code here 
+				result_v := std_logic_vector(MultL(signed(a),signed(b)));
 
-      --       when DIV_OP => -- do not implement
-      --       when REM_OP => -- do not implement
+				-- Si alguno de los dos operandos ocupa más de DATA_WIDTH/2 hay overflow
+				for i in DATA_WIDTH/2 to DATA_WIDTH loop
+					if a(i) /= b(i) then
+						ovf <= '1';
+					end if;
+				end loop;
+
+			--  when DIV_OP => -- do not implement
+			--  when REM_OP => -- do not implement
+
 			when INC_OP => 
-      -- add code here
+				result_v := std_logic_vector(signed(a) + 1);
+				-- Si sumo a un positivo un positivo y me sale negativo => overflow
+				-- b siempre es positivo
+				if a(a'high) = '0' and result_v(result_v'high) = '1' then
+					ovf <= '1';
+				end if;
 
-      -- add also code for the rest of the operations : DEC_OP,ZRO_OP,AND_OP,OR_OP,XOR_OP,
-      --  INV_OP,PASS_A,PASS_B,SHR_ARTH,SHR_LGC,SHL_ARTH,SHL_LGC,ROTR,ROTL
+			when DEC_OP =>
+				result_v := std_logic_vector(signed(a) - 1);
+				-- Si resto a un negativo un positivo y me sale positivo => overflow
+				-- b siempre es negativo
+				if a(a'high) = '1' and result_v(result_v'high) = '0' then
+					ovf <= '1';
+				end if;
 
-
+			when ZRO_OP =>
+				result_v := (others => '0');
+			when AND_OP =>
+				result_v := std_logic_vector(unsigned(a) and unsigned(b));
+			when OR_OP =>
+				result_v := std_logic_vector(unsigned(a) or unsigned(b));
+			when XOR_OP =>
+				result_v := std_logic_vector(unsigned(a) xor unsigned(b));
+			when INV_OP =>
+				result_v := std_logic_vector(not unsigned(a));
+			when PASS_A =>
+				result_v := std_logic_vector(signed(a));
+			when PASS_B =>
+				result_v := std_logic_vector(signed(b));
+			when SHR_ARTH =>
+				result_v := std_logic_vector(shift_right(signed(a),cnt_i));
+			when SHR_LGC =>
+				result_v := std_logic_vector(shift_right(unsigned(a),cnt_i));
+			when SHL_ARTH =>
+				result_v := std_logic_vector(shift_left(signed(a),cnt_i));
+				result_v(result_v'high) := a(a'high);
+			when SHL_LGC =>
+				result_v := std_logic_vector(shift_left(unsigned(a),cnt_i));
+			when ROTR =>
+				result_v := std_logic_vector(rotate_right(signed(a),cnt_i));
+			when ROTL =>
+				result_v := std_logic_vector(rotate_left(signed(a),cnt_i));
 			when others => 
 				result_v := a;
 		end case;
 		result_i <= result_v;
 	end process computation;
 
-  -- Calculate zro and neg
-  -- add code here
+	-- Calculate zro and neg
+	zro <= '1' when signed(result_i) = 0 else
+	       '0';
+	neg <= '1' when result_i(result_i'high) = '1' else
+	       '0';
 
-
-
+	--proces(...) begin
+	--if signed(result_i) = 0 then
+	--	zro <= '0';
+	--end if;
+	--end process;
 
 	result <= result_i;
-
 end architecture;
-
