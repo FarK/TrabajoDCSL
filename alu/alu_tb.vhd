@@ -60,9 +60,32 @@ entity alu_tb is
 	end entity;
 
 architecture test of alu_tb is
-	-- declare signals to connect the ALU
-	-- you may use the same names as the ALU formal ports
-	-- add code here
+	-- Signals to connect the ALU
+	signal a           : std_logic_vector (DATA_WIDTH - 1 downto 0); 
+	signal b           : std_logic_vector (DATA_WIDTH - 1 downto 0);
+	signal sel         : alu_op;
+	signal shiftCnt    : std_logic_vector (4 downto 0); -- shift count
+	signal shiftCntSrc : std_logic; -- shift count source
+	signal result      : std_logic_vector (DATA_WIDTH - 1 downto 0);
+	signal neg         : std_logic; -- negative
+	signal ovf         : std_logic; -- overflow
+	signal zro         : std_logic;  -- zero
+
+	signal EndOfSim : boolean:=false;
+
+	component alu
+		port (
+			a           : in std_logic_vector; 
+			b           : in std_logic_vector;
+			sel         : in alu_op;
+			shiftCnt    : in std_logic_vector; -- shift count
+			shiftCntSrc : in std_logic; -- shift count source
+			result      : out std_logic_vector;
+			neg         : out std_logic; -- negative
+			ovf         : out std_logic; -- overflow
+			zro         : out std_logic  -- zero
+		     );
+	end component;
 
 	-- computation (propagation) delay time
 	constant delay_time : time := 20 ns;
@@ -99,41 +122,107 @@ architecture test of alu_tb is
 
 begin
 	-- instantiate the ALU here
-	-- add code here
+	A1: alu port map(
+		a => a,
+		b => b,
+		sel => sel,
+		shiftCnt => shiftCnt,
+		shiftCntSrc => shiftCntSrc,
+		result => result,
+		neg => neg,
+		ovf => ovf,
+		zro => zro
+	);
 
 	testbench_proc: process
 	-- declare a pointer to the test vectors file
-	-- add code here
+	--file testFile : text open read_mode is "../alu/alu_testvectors.txt";
+	file testFile : text open read_mode is "../alu/alu_testvectors.csv";
 
 	-- declare a line buffer
-	-- add code here
+	variable lineBuff : line;
 
 	-- declare variables for the stimuli and expected values that you plan
 	-- to read from the text file
-	-- add code here       
+	variable index	: integer;
+	variable inA	: integer;
+	variable inB	: integer;
+	variable inSel	: std_logic_vector(4 downto 0);
+	variable inCNT	: std_logic_vector(4 downto 0);
+	variable inS	: std_logic;
+	variable outRes	: integer;
+	variable outC	: std_logic;
+	variable outNeg	: std_logic;
+	variable outOvf	: std_logic;
+	variable outZro	: std_logic;
 
 	begin
+		-- discart 4 first lines
+		readline(testFile, lineBuff);
+		readline(testFile, lineBuff);
+		readline(testFile, lineBuff);
+		readline(testFile, lineBuff);
+
 		-- keep reading (loop) until you reach the end of the file
-		-- the loop starts here
-		-- add code here
-		
-		-- read a line into the line buffer
-		-- add code here
-		
-		-- read test vector entries one by one from the line buffer
-		-- add code here    
-		
-		-- applying stimuli
-		-- add code here
+		while not endfile(testFile)
+		loop
+			-- read a line into the line buffer
+			readline(testFile, lineBuff);
+			
+			-- read test vector entries one by one from the line buffer
+			read(lineBuff, index);
+			read(lineBuff, inA);
+			read(lineBuff, inB);
+			read(lineBuff, inSel);
+			read(lineBuff, inCNT);
+			read(lineBuff, inS);
+			read(lineBuff, outRes);
+			read(lineBuff, outC);
+			read(lineBuff, outNeg);
+			read(lineBuff, outOvf);
+			read(lineBuff, outZro);
+			
+			-- applying stimuli
+			a <= std_logic_vector(to_signed(inA, DATA_WIDTH));
+			b <= std_logic_vector(to_signed(inB, DATA_WIDTH));
+			sel <= slv_to_alu_op(inSel);
+			shiftCnt <= inCNT;
+			shiftCntSrc <= inS;
 
-		wait for delay_time;
+			wait for delay_time;
 
-		-- Comparing outputs against expected values
-		-- add code here
+			-- Comparing outputs against expected values
+			if outC = '1' then
+				-- Result
+				assert result = std_logic_vector(to_signed(outRes, DATA_WIDTH))
+					report 	"Test No " & integer'image(index + 4) &
+						" -- Result = " & integer'image(to_integer(signed(result))) &
+						" , se esperaba Result = " & integer'image(outRes)
+					severity ERROR;
+			end if;
+			-- Neg
+			assert neg = outNeg
+				report 	"Test No " & integer'image(index + 4) &
+					" -- Neg = " & std_logic'image(neg) &
+					" , se esperaba Neg = " & std_logic'image(outNeg)
+				severity ERROR;
 
-		wait for time_offset;
+			-- Ovf
+			assert ovf = outOvf
+				report 	"Test No " & integer'image(index + 4) &
+					" -- Ovf = " & std_logic'image(ovf) &
+					" , se esperaba Ovf = " & std_logic'image(outOvf)
+				severity ERROR;
 
-		-- the loop ends here
+			-- Zro
+			assert zro = outZro
+				report 	"Test No " & integer'image(index + 4) &
+					" -- Zro = " & std_logic'image(zro) &
+					" , se esperaba Zro = " & std_logic'image(outZro)
+				severity ERROR;
+
+			wait for time_offset;
+		end loop;
 		wait; -- wait forever after consuming all the test vectors
 	end process;
 end architecture;
