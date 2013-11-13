@@ -223,6 +223,7 @@ begin
 
 			wait for time_offset;
 		end loop;
+		EndOfSim <= true;
 		wait; -- wait forever after consuming all the test vectors
 	end process;
 end architecture;
