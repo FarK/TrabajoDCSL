@@ -86,7 +86,7 @@ begin
 		 to_integer(unsigned(shiftCnt));
 
 	-- Perform the actual computations for ovf and result_i depending on the value of sel, a,b and cnt_i
-	computation: process (a,b,sel,shiftCnt,shiftCntSrc)
+	computation: process (a,b,sel,shiftCnt,shiftCntSrc,cnt_i)
 		variable result_v : std_logic_vector(result'range);  -- assign the result first to a variable (= immediate assignment)
 								     -- because the result will also be needed to calculate
 								     -- the overflow flag.
@@ -101,7 +101,7 @@ begin
 
 				-- Si sumo a un positivo un positivo y me sale negativo => overflow
 				-- Si sumo a un negativo un negativo y me sale positivo => overflow
-				if a(a'high) = b(b'high-1) and result_v(result_v'high) /= a(a'high) then
+				if a(a'high) = b(b'high) and result_v(result_v'high) /= a(a'high) then
 					ovf <= '1';
 				end if;
 
@@ -109,7 +109,7 @@ begin
 				result_v := std_logic_vector(signed(a) - signed(b));
 				-- Si resto a un positivo un negativo y me sale negativo => overflow
 				-- Si resto a un negativo un positivo y me sale positivo => overflow
-				if a(a'high) /= b(b'high-1) and result_v(result_v'high) = b(b'high) then
+				if a(a'high) /= b(b'high) and result_v(result_v'high) = b(b'high) then
 					ovf <= '1';
 				end if;
 
@@ -117,8 +117,8 @@ begin
 				result_v := std_logic_vector(MultL(signed(a),signed(b)));
 
 				-- Si alguno de los dos operandos ocupa más de DATA_WIDTH/2 hay overflow
-				for i in DATA_WIDTH/2 to DATA_WIDTH loop
-					if a(i) /= b(i) then
+				for i in DATA_WIDTH/2-1 to DATA_WIDTH-1 loop
+					if a(i) /= a(a'high) or b(i) /= b(b'high) then
 						ovf <= '1';
 					end if;
 				end loop;
