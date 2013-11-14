@@ -75,19 +75,20 @@ begin
 	-- initialize it with the constant RAM_CONTENTS
 	-- * NOTE: Initial values are used for simulation, they will be ignored in 
 	-- synthesis.  
-	-- add code here
+	--variable memoryContents : memContents_t(2**ADDR_WIDTH-1 downto 0) := RAM_CONTENTS;
+	variable memoryContents : memContents_t(0 to 2**ADDR_WIDTH-1) := RAM_CONTENTS;
 	begin
 		if rising_edge (clk) then
 			complete <= '0';
 			-- provide a condition that resembles enabling the memory module
-			if (- ? - ) then   -- add code here
-				if (- ? - ) then	-- add code here                    -- writing
-							-- data is stored in memory location pointed to by 'addr'
-							-- add code here
+			if (rd = '1' or wr = '1') then
+				if (wr = '1') then	-- writing
+					-- data is stored in memory location pointed to by 'addr'
+					memoryContents(to_integer(unsigned(addr))) := inBus;
 					complete <= '1';
 				else	-- reading 
 					-- data is read from memory location pointed to by 'addr'
-					-- add code here
+					outBus <= memoryContents(to_integer(unsigned(addr)));
 					complete <= '1';
 				end if;
 			end if;
