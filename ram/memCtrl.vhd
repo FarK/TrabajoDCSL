@@ -91,19 +91,64 @@ architecture behavioral of memCtrl is
 	signal nextState    : state;
 begin
 	-- complete the sensitivity list of the state register process
-	stateFF: process (- ? -)
+	stateFF: process (clk)
 	begin
-		-- Synchronous reset
-		-- reset state is serviceFch
-
-		-- Register current state every clock cycle
+		if rising_edge (clk) then
+			-- Synchronous reset
+			-- reset state is serviceFch
+			if(rst = '1') then
+				currentState <= serviceFch;
+			else
+				-- Register current state every clock cycle
+				currentState <= nextState;
+			end if;
+		end if;
 	end process;
 
 	-- complete the sensitivity list of the next state decoding logic
-	nextState_dec: process (- ? -)    
+	nextState_dec: process (currentState, rqDPT, rqFch, rqIO)
 	begin
 		-- for each state (current state), define the next state according to the request ports (rqDPT, rqFch, rqIO)
 		-- take priority of the units (data path, fetch unit, cpu) into account
+		if(memReady = '1') then
+			case currentState is
+				when serviceFch =>
+					if(rqFch = '1') then
+						nextState <= serviceFch;
+					elsif(rqDPT = '1') then
+						nextState <= serviceDPT;
+					elsif(rqIO = '1') then
+						nextState <= serviceIO;
+					else
+						nextState <= serviceFch;
+					end if;
+				when serviceDPT =>
+					if(rqFch = '1') then
+						nextState <= serviceFch;
+					elsif(rqDPT = '1') then
+						nextState <= serviceDPT;
+					elsif(rqIO = '1') then
+						nextState <= serviceIO;
+					else
+						nextState <= serviceFch;
+					end if;
+				when serviceIO =>
+					if(rqFch = '1') then
+						nextState <= serviceFch;
+					elsif(rqDPT = '1') then
+						nextState <= serviceDPT;
+					elsif(rqIO = '1') then
+						nextState <= serviceIO;
+					else
+						nextState <= serviceFch;
+					end if;
+			end case;
+		end if;
+
+		---- Si no hay peticiones nos vamos al estado de fetch
+		--if(rqFch='0' and rqDPT='0' and rqIO='0') then
+		--	nextState <= serviceFch;
+		--end if;
 	end process;
 
 	-- Memory data-out bus is always connected to the data-in buses of all units  
@@ -112,7 +157,11 @@ begin
 	inIO  <= dataOut;
 
 	-- complete the sensitivity list of the multiplexer logic
-	multiplexer: process (- ? -)
+	multiplexer: process (currentState,
+				rdDPT,wrDPT,addrDPT,outDPT,
+				rdFch,addrFch,
+				rdIO,wrIO,addrIO,outIO,
+				memReady)
 	begin
 		-- default values of the 'ready' signals
 		readyDPT <= '0';
@@ -120,11 +169,25 @@ begin
 		readyIO <= '0';
 
 		-- for each state (current state), define the multiplexer outputs 
-		-- The mux outputs in the serviceFch state are given as an example
-		--       addr     <= addrFch;
-		--       dataIn   <= outDPT; -- This assingment is arbitrary (to avoid a latch)
-		--       memRd    <= rdFch;
-		--       memWr    <= '0';
-		--       readyFch <= memReady;
+		case currentState is
+			when serviceFch =>
+				addr     <= addrFch;
+				dataIn   <= outDPT; -- This assingment is arbitrary (to avoid a latch)
+				memRd    <= rdFch;
+				memWr    <= '0';
+				readyFch <= memReady;
+			when serviceDPT =>
+				addr     <= addrDPT;
+				dataIn   <= outDPT; -- This assingment is arbitrary (to avoid a latch)
+				memRd    <= rdDPT;
+				memWr    <= wrDPT;
+				readyDPT <= memReady;
+			when serviceIO =>
+				addr     <= addrIO;
+				dataIn   <= outIO; -- This assingment is arbitrary (to avoid a latch)
+				memRd    <= rdIO;
+				memWr    <= wrIO;
+				readyIO  <= memReady;
+		end case;
 	end process;
 end architecture;
