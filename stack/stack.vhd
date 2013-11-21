@@ -66,17 +66,18 @@ end entity;
 
 architecture behavioral of stack is
 	-- Declare the type 'stackData' as an array of words with the same width of 'd'
-	
+	type stackData is array(natural range<>) of std_logic_vector(d'range);
 	-- Declare the signal 'st_data' of type 'stackData' and width of 16 (ascending range)
-	
+	signal st_data : stackData(0 to STACK_SIZE);
 	-- Declare an unsigned signal for the stack pointer with appropriate width (depth of stack is 16)
-	
+	signal pointer : unsigned(4 downto 0);
 	-- Declare a signal for the output register with appropriate type and width
-	
+	signal q_int : std_logic_vector(q'range);
 	-- Declare a type for the states of the FSM. the states are: idle, wr, rd, inc, dec
-	
+	type state is (idle, wr, rd, inc, dec);
 	-- Declare two signals for the currentState and nextState
-
+	signal currentState : state;
+	signal nextState : state;
 	constant STACK_SLOT : natural := 1;
 begin
 	process (rst, clk)
@@ -88,9 +89,39 @@ begin
 		end if;
 	end process;
 
-	process (-- complete the sensitivity list)
+	process (en, d, push, pop)
 	begin
 		-- State transition process. Determine 'nextState' depending on 'currentState' (use the given transition table)
+		case currentState is
+			when idle =>
+				if(push='1' and en='1' and pointer<STACK_SIZE-1) then
+					nextState <=  wr;
+				elsif(pop='1' and en='1' and pointer>0) then
+					nextState <=  dec;
+				else
+					nextState <=  idle;
+				end if;
+			when inc =>
+				if(push='1' and en='1' and pointer<STACK_SIZE) then
+					nextState <=  wr;
+				elsif(pop='1' and en='1' and pointer>0) then
+					nextState <=  dec;
+				else
+					nextState <=  idle;
+				end if;
+			when rd =>
+				if(push='1' and en='1' and pointer<STACK_SIZE) then
+					nextState <=  wr;
+				elsif(pop='1' and en='1' and pointer>0) then
+					nextState <=  dec;
+				else
+					nextState <=  idle;
+				end if;
+			when wr =>
+					nextState <=  inc;
+			when dec =>
+					nextState <=  rd;
+		end case;
 	end process;
 
 	process (rst, clk)

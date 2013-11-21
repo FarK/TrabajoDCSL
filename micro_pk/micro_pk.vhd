@@ -52,6 +52,8 @@ package micro_pk is
   constant DATA_WIDTH : integer := 32;
 
   constant ADDR_WIDTH : integer := 12;
+
+  constant STACK_SIZE : integer := 16;
   
   constant SHORT_DATA  : positive := 9;
   constant inxHighWord : std_logic_vector (ADDR_WIDTH - 1 downto SHORT_DATA)
