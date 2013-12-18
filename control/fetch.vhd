@@ -68,21 +68,60 @@ entity fetch is
 end entity;
 
 architecture moore of fetch is
-	-- declare a new type for the states
-	-- declare signals for current state (and next state)
-	-- Instruction register enable  
+	type state is (idle, readingMemory, incrPC);
+	signal currentState : state;
+	signal nextState    : state;
 	signal IR_iEn : std_logic;
 begin
-	-- Write the code of the FSM here
-	-- Instruction register  
-	process (rst, clk)
+	nextState_dec: process(memReady, readInstr, memData)
+	begin
+		--Valores por defecto
+		PCinc <= '0';
+		vldInstr <= '0';
+		memRd <= '0';
+		IR_iEn <= '0';
+
+		case currentState is
+			when idle =>
+				vldInstr <= '1';
+
+				if(readInstr = '1') then
+					nextState <= readingMemory;
+				else
+					nextState <= idle;
+				end if;
+			when readingMemory =>
+				memRd <= '1';
+
+				if(memReady = '1') then
+					nextState <= incrPC;
+				else
+					nextState <= readingMemory;
+				end if;
+			when incrPC =>
+				PCinc <= '1';
+				vldInstr <= '1';
+				IR_iEn <= '1';
+
+				if(readInstr = '1') then
+					nextState <= readingMemory;
+				else
+					nextState <= idle;
+				end if;
+		end case;
+	end process;
+
+	process(rst, clk)
 	begin
 		if (rst = '1') then
 			IR <= (IR'range => '0');
-		elsif rising_edge (clk) then
+			currentState <= idle;
+		elsif rising_edge(clk) then
 			if (IR_iEn = '1') then
 				IR      <= memData;
 			end if;
+			
+			currentState <= nextState;
 		end if;
 	end process;
 end architecture;
