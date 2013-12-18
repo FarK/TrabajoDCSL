@@ -102,17 +102,19 @@ architecture behavioral of control is
 	signal dec : dec_t;
 	signal exe : exe_t;
 
-	signal n : boolean; -- intermediate signal (= input 1 of and gate driveing cTrue)
-	signal v : boolean; -- intermediate signal (= input 2 of and gate driveing cTrue)
-	signal z : boolean; -- intermediate signal (= input 3 of and gate driveing cTrue)
+	signal n : std_logic; -- intermediate signal (= input 1 of and gate driveing cTrue)
+	signal v : std_logic; -- intermediate signal (= input 2 of and gate driveing cTrue)
+	signal z : std_logic; -- intermediate signal (= input 3 of and gate driveing cTrue)
 	signal cTrue : std_logic;
 
 	signal currentState : exeUnitState;
 	signal nextState    : exeUnitState;
 
-	alias Bsel : std_logic_vector (4 downto 0) is instReg (9 downto 5);
+	-- Este alias para qué sirve? no está declarado ya?
+	-- La cambiamos por dec.Bsel!! mirar a ver si no peta esto
+	--alias Bsel : std_logic_vector (4 downto 0) is instReg (9 downto 5);
 	-- condition mask
-	alias cmask : std_logic_vector (5 downto 0) is instReg (26 downto 21); 
+	alias cmask : std_logic_vector (5 downto 0) is instReg (6 downto 1); 
 	alias pn : std_logic is instReg (6); -- polarity of negative
 	alias pv : std_logic is instReg (5); -- polarity of overflow
 	alias pz : std_logic is instReg (4); -- polarity of zero
@@ -130,18 +132,17 @@ begin
 	------------------------------------------------------------------------------
 	-- Describe the circuit to dricve cTrue as shown in the lab manual. 
 	-- Use the alias above. 
-	-- Add code here
-
-
+	n <= ((not(neg xor pn)) and cn) or (not cn);
+	v <= ((not(ovf xor pv)) and cv) or (not cv);
+	z <= ((not(zro xor pz)) and cz) or (not cz);
+	cTrue <= n and v and z;
 
 	-- ===========================================================================
 	-- Decode unit
 	------------------------------------------------------------------------------
 	-- Incorporate the decode unit here (using the decoding instruction 'decodeInstr')
-	-- Add code here
-
-
-
+	dec <= decodeInstr(instReg, cTrue);
+	
 	-- ===========================================================================
 	-- Execute unit FSM
 	------------------------------------------------------------------------------
@@ -572,7 +573,8 @@ begin
 				-- STX 
 				when g8s1 =>
 					exe.ACCen     <= '1';
-					exe.Bsel      <= Bsel;
+					--exe.Bsel      <= Bsel;
+					exe.Bsel      <= dec.Bsel;
 				when g8s2 =>
 					exe.ACCen     <= '1';
 					exe.MBRen     <= '1';
