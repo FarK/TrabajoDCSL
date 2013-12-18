@@ -89,6 +89,7 @@ package micro_control_pk is
 		ALUsel		: alu_op;
 		CFen		: std_logic;
 		DATAsel		: std_logic_vector(1 downto 0);
+		MBRsel		: std_logic;
 		RegFileWr	: std_logic;
 		stkInc		: std_logic;
 		stkDec		: std_logic;
