@@ -182,24 +182,24 @@ begin
 	wordByte <= instRegOut (26);
 
 	data_bus_1: mux4xbus port map(
-		inport0 =>                    -- add code here
-		inport1 =>                    -- add code here
-		inport2 =>                    -- add code here
-		inport3 =>                    -- add code here
+		inport0 => ACCout,
+		inport1 => MBRout,
+		inport2 => data_bus_inport2,
+		inport3 => data_bus_inport3,
 		sel     => DATAsel, -- (00:ACC, 01:MBR , 10:extended stack  , 11:extended control)
 		outport => data_bus
 	);
 
 	alu_port_a_mux: mux2xbus port map(
-		inport0 =>                     -- add code here
-		inport1 =>                     -- add code here
+		inport0 => regFile_port_a,
+		inport1 => ACCout,
 		sel     => portAsel, -- (0:regfile A ,1:ACC)
 		outport => alu_port_a
 	);
 
 	alu_port_b_mux: mux2xbus port map(
-		inport0 =>                     -- add code here
-		inport1 =>                     -- add code here
+		inport0 => regFile_port_b,
+		inport1 => ACCout,
 		sel     => portBsel, -- (0:regfile B ,1:ACC)
 		outport => alu_port_b
 	);
@@ -222,21 +222,20 @@ begin
 	regFile_1: regFile port map(
 		rst    => rst,
 		clk    => clk,
-		busC   =>                     -- add code here
+		busC   => data_bus,	--TODO: No estoy seguro. Comprobar.
 		stkInc => stkInc,
 		stkDec => stkDec,
 		wr     => RegFileWr,
 		selA   => selA,
 		selB   => selB,
 		selC   => selC,
-		busA   =>                     -- add code here
-		busB   =>                     -- add code here
-		
+		busA   => regFile_port_a,
+		busB   => regFile_port_b
 	);
 
 	alu_1: alu port map(
-		a           =>                     -- add code here
-		b           =>                     -- add code here
+		a           => alu_port_a,
+		b           => alu_port_b,
 		sel         => ALUsel,
 		shiftCnt    => shiftCnt,
 		shiftCntSrc => shiftCntSrc,
@@ -251,51 +250,50 @@ begin
 		clk => clk,
 		en  => ACCen,
 		d   => alu_result,
-		q   =>                     -- add code here
-		
+		q   => ACCout
 	);
 
 	stack_1: stack port map(
 		rst  => rst,
 		clk  => clk,
 		en   => STKen,
-		d    =>                     -- add code here
+		d    => PCout,
 		push => STKpush,
 		pop  => STKpop,
-		q    =>                     -- add code here
+		q    => data_bus_inport2
 	);
 
 	pc_1: counter port map(
 		rst => rst,
 		clk => clk,
-		d   =>                     -- add code here  (only 12 LSB's)
-		ld  => Pcen,
+		d   => data_bus(ADDR_WIDTH downto 0),	-- add code here  (only 12 LSB's) TODO: ¿asi?
+		ld  => PCen,
 		inc => PCinc,
-		q   =>                     -- add code here
+		q   => PCout
 	);
 
 	mar_1: register_en port map(
 		rst => rst,
 		clk => clk,
 		en  => MARen,
-		d   =>                      -- add code here  (only 12 LSB's)
-		q   =>                      -- add code here
+		d   => data_bus(ADDR_WIDTH downto 0),	-- add code here  (only 12 LSB's) TODO: ¿asi?
+		q   => MARout
 	);
 
 	mbr_1: register_en port map(
 		rst => rst,
 		clk => clk,
 		en  => MBRen,
-		d   =>                       -- add code here
-		q   =>                       -- add code here
+		d   => mbr_bus,
+		q   => MBRout
 	);
 
 	instReg_1: register_en port map(
 		rst => rst,
 		clk => clk,
 		en  => IRen,
-		d   =>                       -- add code here
-		q   =>                       -- add code here
+		d   => instReg,
+		q   => instRegOut
 	);
 
 	fetch_1: fetch port map(
@@ -358,4 +356,3 @@ begin
 		q   => cf
 	);
 end architecture;
-
