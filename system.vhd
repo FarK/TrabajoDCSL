@@ -90,9 +90,76 @@ architecture struct of system is
 	signal unconnected_databus2 : std_logic_vector (DATA_WIDTH - 1 downto 0);
 begin
 	-- CPU
+	cpu_1: cpu port map(
+		rst => rst,
+		clk => clk,
+		-- Memory interface : Data
+		rqDPT => DPT_memRq,
+		rdDPT => DPT_memRd,
+		wrDPT => DPT_memWr,
+		addrDPT => DPT_addr_bus,
+		inDPT => DPT_data_in,
+		outDPT => DPT_data_out,
+		memReadyDPT => DPT_memReady,
+		-- Memory interface : Instructions
+		rqFch => fch_memRq,
+		rdFch => fch_memRd,
+		addrFch => fch_addr_bus,
+		inFch => fch_data_in,
+		memReadyFch => fch_memReady,
+		-- IO Unit interface
+		deviceID => open,
+		wordByte => open,
+		IORd => open,
+		IOWr => open,
+		IOReady => '0',
+		IO_dataIn => IO_dataIn,
+		IO_dataOut => IO_dataIn		-- Los conectamos en bucle porque no los usamos
+	);
 
 	-- Memory Traffic Controller
+	memoryTrafficControler: memCtrl port map(
+		rst => rst,
+		clk => clk,
+		-- Data path
+		rqDPT => DPT_memRq,
+		rdDPT => DPT_memRd,
+		wrDPT => DPT_memWr,
+		addrDPT => DPT_addr_bus,
+		inDPT => DPT_data_in,
+		outDPT => DPT_data_out,
+		readyDPT => DPT_memReady,
+		-- Fetch unit
+		rqFch => fch_memRq,
+		rdFch => fch_memRd,
+		addrFch => fch_addr_bus,
+		inFch => fch_data_in,
+		readyFch => fch_memReady,
+		-- I/O unit
+		rqIO => '0',
+		rdIO => '0',
+		wrIO => '0',
+		addrIO => unconnected_databus1,
+		inIO => unconnected_databus2,
+		outIO => unconnected_databus2,	-- Los conectemos en blucle porque no los usamos
+		readyIO => open,
+		-- control signals
+		addr => mem_addr_bus,
+		dataIn => mem_data_in,
+		dataOut => mem_data_out,
+		memRd => memRd,
+		memWr => memWr,
+		memReady => memReady
+	);
 
 	-- Main Memory    
-
+	mainMemory: memory port map(
+		clk	=> clk,
+		inBus	=> mem_data_in,
+		addr	=> mem_addr_bus,
+		rd	=> memRd,
+		wr	=> memWr,
+		outBus	=> mem_data_out,
+		ready	=> memReady
+	);
 end architecture;
