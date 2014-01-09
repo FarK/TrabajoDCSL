@@ -266,7 +266,7 @@ begin
 	pc_1: counter port map(
 		rst => rst,
 		clk => clk,
-		d   => data_bus(ADDR_WIDTH downto 0),	-- add code here  (only 12 LSB's) TODO: ¿asi?
+		d   => data_bus(ADDR_WIDTH-1 downto 0),
 		ld  => PCen,
 		inc => PCinc,
 		q   => PCout
@@ -276,7 +276,7 @@ begin
 		rst => rst,
 		clk => clk,
 		en  => MARen,
-		d   => data_bus(ADDR_WIDTH downto 0),	-- add code here  (only 12 LSB's) TODO: ¿asi?
+		d   => data_bus(ADDR_WIDTH-1 downto 0),
 		q   => MARout
 	);
 
