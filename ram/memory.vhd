@@ -66,6 +66,10 @@ end entity;
 
 architecture behave of memory is 
 	signal complete : std_logic;
+
+	-- Señales auxiliares para visualizar en la simulación y ayudar a la depuración
+	signal ramDebug_NData : std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal ramDebug_Data : memContents_t(0 to 16);
 begin
 	ready <= (not wr and not rd) or complete;
 	ram: process (clk)
@@ -78,6 +82,10 @@ begin
 	--variable memoryContents : memContents_t(2**ADDR_WIDTH-1 downto 0) := RAM_CONTENTS;
 	variable memoryContents : memContents_t(0 to 2**ADDR_WIDTH-1) := RAM_CONTENTS;
 	begin
+		-- Asignamos los valores correspondientes a las variables de debug
+		ramDebug_NData <= memoryContents(2999);
+		ramDebug_Data <= memoryContents(3000 to 3016);
+
 		if rising_edge (clk) then
 			complete <= '0';
 			-- provide a condition that resembles enabling the memory module
