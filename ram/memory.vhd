@@ -70,6 +70,7 @@ architecture behave of memory is
 	-- Señales auxiliares para visualizar en la simulación y ayudar a la depuración
 	signal ramDebug_NData : std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal ramDebug_Data : memContents_t(0 to 16);
+	signal ramDebug_Stack : memContents_t(0 to 6);
 begin
 	ready <= (not wr and not rd) or complete;
 	ram: process (clk)
@@ -85,6 +86,7 @@ begin
 		-- Asignamos los valores correspondientes a las variables de debug
 		ramDebug_NData <= memoryContents(2999);
 		ramDebug_Data <= memoryContents(3000 to 3016);
+		ramDebug_Stack <= memoryContents(3584 to 3590);
 
 		if rising_edge (clk) then
 			complete <= '0';
