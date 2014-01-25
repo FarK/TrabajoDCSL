@@ -73,7 +73,7 @@ architecture moore of fetch is
 	signal nextState    : state;
 	signal IR_iEn : std_logic;
 begin
-	nextState_dec: process(memReady, readInstr, memData)
+	nextState_dec: process(memReady, readInstr, memData, currentState)
 	begin
 		--Valores por defecto
 		PCinc <= '0';
