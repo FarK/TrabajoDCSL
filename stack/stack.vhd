@@ -89,7 +89,7 @@ begin
 		end if;
 	end process;
 
-	process (en, d, push, pop)
+	process (en, d, push, pop, currentState)
 	begin
 		-- State transition process. Determine 'nextState' depending on 'currentState' (use the given transition table)
 		case currentState is
