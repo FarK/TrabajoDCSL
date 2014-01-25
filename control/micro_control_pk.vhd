@@ -241,6 +241,7 @@ package body micro_control_pk is
 
 			when INC_i | DEC_i | NOT_i | ZRO_i | CPR_i =>
 				ret.instrGroup := G2;
+				ret.CFen       := '1';
 			when CMP_i =>
 				ret.instrGroup := G3;
 				ret.CFen       := '1';
