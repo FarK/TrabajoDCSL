@@ -260,7 +260,7 @@ begin
 		d    => PCout,
 		push => STKpush,
 		pop  => STKpop,
-		q    => data_bus_inport2
+		q    => STKout
 	);
 
 	pc_1: counter port map(
