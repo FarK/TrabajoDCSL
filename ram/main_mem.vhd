@@ -60,15 +60,16 @@ entity main_mem is
 end entity;
 
 architecture struct of main_mem is
-  
+
 begin
+  rdy <= '1';
+  rfd <= '0';
+  
   blockRAM: micro6_ram port map (
-    addr => addr,
-  	clk => clk,
-  	din => din,
-  	dout => dout,
-  	nd => nd,
-  	rfd => rfd,
-  	rdy => rdy,
-  	we => we);  
+   addra => addr,
+  	clka => clk,
+  	dina => din,
+  	douta => dout,
+  	ena => nd,
+  	wea(0) => we);  
 end architecture;

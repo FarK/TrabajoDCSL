@@ -299,14 +299,14 @@ end component;
 
 component micro6_ram IS
 	port (
-	addr: IN std_logic_VECTOR(11 downto 0);
-	clk: IN std_logic;
-	din: IN std_logic_VECTOR(31 downto 0);
-	dout: OUT std_logic_VECTOR(31 downto 0);
-	nd: IN std_logic;
-	rfd: OUT std_logic;
-	rdy: OUT std_logic;
-	we: IN std_logic);
+	clka: IN std_logic;
+	dina: IN std_logic_VECTOR(31 downto 0);
+	addra: IN std_logic_VECTOR(11 downto 0);
+	ena: IN std_logic;
+	wea: IN std_logic_VECTOR(0 downto 0);
+	douta: OUT std_logic_VECTOR(31 downto 0)
+	);
+
 end component;
 
 component main_mem IS
