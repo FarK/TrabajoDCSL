@@ -359,10 +359,7 @@ component ila2
   );
 end component;
 
--- ROC: Reset On configuration 
--- component ROC
---   port (O : out std_logic);
--- end component;
+
 
 -- DCM: Digital Clock Manager
 component dcm_1
@@ -384,40 +381,31 @@ component miniUART is
     RxD      : in  Std_Logic;
     TxD      : out Std_Logic;
     Addr     : in  Std_Logic_Vector(1 downto 0); -- 
-    ready     : out std_logic;
     DataIn   : in  Std_Logic_Vector(7 downto 0); -- 
     DataOut  : out Std_Logic_Vector(7 downto 0)); -- 
 end component; 
 
-component io_unit is
+component IO2Uart
   port (
     rst : in std_logic;
     clk : in std_logic;
-    -- Memory interface
-    memRd : out std_logic;
-    memWr : out std_logic;
-    memReady : in std_logic;
-    memAddress: out std_logic_vector (ADDR_WIDTH - 1 downto 0);
-    memDataIn : in std_logic_vector (DATA_WIDTH - 1 downto 0);
-    memDataOut : out std_logic_vector (DATA_WIDTH - 1 downto 0);
-    -- MBR interface
-    MBRin : in std_logic_vector (DATA_WIDTH - 1 downto 0);
-    MBRout : out std_logic_vector (DATA_WIDTH - 1 downto 0);
-    -- External interface
-    devID : out std_logic_vector (5 downto 0);
-    extRd : out std_logic;
-    extWr : out std_logic;
-    extBusIn : in std_logic_vector (7 downto 0);
-    extBusOut : out std_logic_Vector (7 downto 0);
-    rdy_pre  : in std_logic;
-    rdy_post : in std_logic;
+
+    -- uart interface
+    uart_cs_n    : out std_logic;
+    uart_rd_n    : out std_logic;
+    uart_wr_n    : out std_logic;
+    uart_addr    : out  std_logic_vector (1 downto 0);
+    uart_DataIn  : out  std_logic_vector (7 downto 0);
+    uart_DataOut : in   std_logic_vector (7 downto 0);
+    
     -- CPU interface
-    rd : in std_logic;
-    wr : in std_logic;
-    ready : out std_logic; -- operation done
-    wordByte : in std_logic; -- 0: byte, 1: word
-    deviceID : in std_logic_vector (5 downto 0)); -- device ID
-end component;
+    cpu_MBRin   : out std_logic_vector (31 downto 0);
+    cpu_MBRout  : in std_logic_vector (31 downto 0);    
+    cpu_rd      : in std_logic;
+    cpu_wr      : in std_logic;
+    cpu_ready   : out std_logic;                     -- operation done
+    cpu_deviceID: in std_logic_vector (5 downto 0)); -- device ID
+end component;  
 
 component memCtrl2 is
   port (
@@ -439,35 +427,7 @@ component memCtrl2 is
     ready : in std_logic);
 end component;
 
-component dma is
-  port (
-    rst : in std_logic;
-    clk : in std_logic;
-    -- Memory interface
-    memRd : out std_logic;
-    memWr : out std_logic;
-    memReady : in std_logic;
-    memAddress: out std_logic_vector (ADDR_WIDTH - 1 downto 0);
-    memDataIn : in std_logic_vector (DATA_WIDTH - 1 downto 0);
-    memDataOut : out std_logic_vector (DATA_WIDTH - 1 downto 0);
-    -- MBR interface
-    MBRin : in std_logic_vector (DATA_WIDTH - 1 downto 0);
-    MBRout : out std_logic_vector (DATA_WIDTH - 1 downto 0);
-    -- External interface
-    devID : out std_logic_vector (5 downto 0);
-    extRd : out std_logic;
-    extWr : out std_logic;
-    extBusIn : in std_logic_vector (7 downto 0);
-    extBusOut : out std_logic_Vector (7 downto 0);
-    rdy_pre  : in std_logic;
-    rdy_post : in std_logic;
-    -- CPU interface
-    rd : in std_logic;
-    wr : in std_logic;
-    ready : out std_logic; -- operation done
-    wordByte : in std_logic; -- 0: byte, 1: word
-    deviceID : in std_logic_vector (5 downto 0)); -- device ID
-end component;
+
 
 
 END package;
