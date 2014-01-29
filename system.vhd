@@ -86,7 +86,7 @@ architecture struct of system is
 	signal memReady     : std_logic;
 	---
 	signal IO_dataIn   : std_logic_vector (DATA_WIDTH - 1 downto 0);
-	signal unconnected_databus1 : std_logic_vector (DATA_WIDTH - 1 downto 0);
+	signal unconnected_databus1 : std_logic_vector (ADDR_WIDTH - 1 downto 0);
 	signal unconnected_databus2 : std_logic_vector (DATA_WIDTH - 1 downto 0);
 begin
 	-- CPU
