@@ -234,4 +234,18 @@ begin
 		Addr     => uart_addr, 
 		DataIn   => uart_DataIn, 
 		DataOut  => uart_dataOut);
+
+	-- GPIO
+	gpio_1: gpio port map (
+	      clk		=> clk,
+	      rst		=> rst,
+	      cpu_MBRin		=> IO2CPU_data,
+	      cpu_MBRout	=> CPU2IO_data,
+	      cpu_rd		=> IORd,
+	      cpu_wr		=> IOWr,
+	      cpu_ready		=> IOReady,
+	      cpu_deviceID	=> deviceID,
+	      leds		=> leds,
+	      switches		=> switches
+	);
 end architecture;

@@ -132,6 +132,11 @@ package micro_pk is
   -- add code here      
   type regArray_t is array(natural range<>) of std_logic_vector(DATA_WIDTH -1 downto 0);
 
+  -- DeviceIDs
+  constant UART_ID : integer := 0;
+  constant GPIO_LEDS_ID : integer := 1;
+  constant GPIO_SWITCHES_ID : integer := 2;
+
                
   function MultL (L, R : signed) return signed;
 

@@ -42,7 +42,6 @@
 --   only bytes supported
 --   simple uart interface
 --   error flags are not chekced
---   cpu_deviceID is not used
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -69,7 +68,7 @@ entity IO2Uart is
 		cpu_rd      : in std_logic;
 		cpu_wr      : in std_logic;
 		cpu_ready   : out std_logic;                     -- operation done
-		cpu_deviceID: in std_logic_vector (5 downto 0)   -- device ID -- not used !!!
+		cpu_deviceID: in std_logic_vector (5 downto 0)
 	);
 end entity;
 
@@ -94,59 +93,61 @@ architecture behav of IO2Uart is
 begin
 	process (rst, clk)
 	begin
-		if (rst = '1') then
-			state        <= idle;
-			uart_cs_n    <= '1';
-			uart_rd_n    <= '1';
-			uart_wr_n    <= '1';
-			uart_addr    <= "01"; -- read status
-			uart_DataIn  <= (others => '0');
-			cpu_MBRin    <= (others => '0');
-			cpu_ready    <= '0';
-		elsif (rising_edge (clk)) then
-			case  state is
-				when idle =>   
-					uart_cs_n    <= '1';
-					uart_rd_n    <= '1';
-					uart_wr_n    <= '1';         
-					uart_addr    <= "01";  -- read status  
-					cpu_ready    <= '0';            
-					if cpu_rd='1'  then    -- To read data from Uart : check data_available flag first
-						if uart_DataOut(2) = '1' then
-							state      <= reading1;
-							uart_addr  <= "00";  -- read data
+		if(to_integer(unsigned(cpu_deviceID)) = UART_ID) then
+			if (rst = '1') then
+				state        <= idle;
+				uart_cs_n    <= '1';
+				uart_rd_n    <= '1';
+				uart_wr_n    <= '1';
+				uart_addr    <= "01"; -- read status
+				uart_DataIn  <= (others => '0');
+				cpu_MBRin    <= (others => '0');
+				cpu_ready    <= '0';
+			elsif (rising_edge (clk)) then
+				case  state is
+					when idle =>   
+						uart_cs_n    <= '1';
+						uart_rd_n    <= '1';
+						uart_wr_n    <= '1';         
+						uart_addr    <= "01";  -- read status  
+						cpu_ready    <= '0';            
+						if cpu_rd='1'  then    -- To read data from Uart : check data_available flag first
+							if uart_DataOut(2) = '1' then
+								state      <= reading1;
+								uart_addr  <= "00";  -- read data
+							end if;
+						elsif cpu_wr='1'  then  -- to write data to Uart : check Transmit buffer empty first
+							if uart_DataOut(3)= '1' then 
+								uart_wr_n    <= '0';
+								uart_cs_n    <= '0';
+								uart_DataIn  <= cpu_MBRout(7 downto 0);
+								state        <= writing1;
+							end if;
 						end if;
-					elsif cpu_wr='1'  then  -- to write data to Uart : check Transmit buffer empty first
-						if uart_DataOut(3)= '1' then 
-							uart_wr_n    <= '0';
-							uart_cs_n    <= '0';
-							uart_DataIn  <= cpu_MBRout(7 downto 0);
-							state        <= writing1;
+					when reading1 =>           -- Read data from Uart
+						uart_rd_n    <= '0';
+						uart_cs_n    <= '0';
+						cpu_MBRin             <= (others =>'0');
+						cpu_MBRin(7 downto 0) <= uart_DataOut;
+						state <= reading2;
+					when reading2 =>           -- Stop reading data from Uart and wait till cpu deasserts its read command
+						uart_rd_n   <= '1';
+						uart_cs_n   <= '1';
+						cpu_ready   <= '1';
+						if cpu_rd='0'  then
+							state  <= idle; 
+						end if;          
+					when writing1 =>
+						uart_wr_n    <= '1';
+						uart_cs_n    <= '1';
+						cpu_ready    <= '1';
+						if cpu_wr='0'  then
+							state   <= idle; 
 						end if;
-					end if;
-				when reading1 =>           -- Read data from Uart
-					uart_rd_n    <= '0';
-					uart_cs_n    <= '0';
-					cpu_MBRin             <= (others =>'0');
-					cpu_MBRin(7 downto 0) <= uart_DataOut;
-					state <= reading2;
-				when reading2 =>           -- Stop reading data from Uart and wait till cpu deasserts its read command
-					uart_rd_n   <= '1';
-					uart_cs_n   <= '1';
-					cpu_ready   <= '1';
-					if cpu_rd='0'  then
-						state  <= idle; 
-					end if;          
-				when writing1 =>
-					uart_wr_n    <= '1';
-					uart_cs_n    <= '1';
-					cpu_ready    <= '1';
-					if cpu_wr='0'  then
-						state   <= idle; 
-					end if;
-				when others =>
-					state <= idle;       
-			end case;
+					when others =>
+						state <= idle;       
+				end case;
+			end if;
 		end if;
 	end process;
 end architecture;

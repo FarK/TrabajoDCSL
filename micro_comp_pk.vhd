@@ -415,7 +415,22 @@ component memCtrl2 is
     ready : in std_logic);
 end component;
 
+component gpio is
+	port (
+		clk : in std_logic;
+		rst : in std_logic;
 
+		cpu_MBRin   : out std_logic_vector (31 downto 0);
+		cpu_MBRout  : in std_logic_vector (31 downto 0);    
+		cpu_rd      : in std_logic;
+		cpu_wr      : in std_logic;
+		cpu_ready   : out std_logic;                     -- operation done
+		cpu_deviceID: in std_logic_vector (5 downto 0);
 
+		-- IO Registers
+		leds        : out std_logic_vector(7 downto 0);
+		switches    : in std_logic_vector(3 downto 0)
+	);
+end component;
 
 END package;
