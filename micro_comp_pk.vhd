@@ -359,18 +359,6 @@ component ila2
   );
 end component;
 
-
-
--- DCM: Digital Clock Manager
-component dcm_1
-PORT(
-	CLKIN_IN : IN std_logic;          
-	CLKDV_OUT : OUT std_logic;
-	CLKIN_IBUFG_OUT : OUT std_logic;
-	CLK0_OUT : OUT std_logic
-	);
-end component;
-
 component miniUART is
   port (
     SysClk   : in  Std_Logic;  -- System Clock
