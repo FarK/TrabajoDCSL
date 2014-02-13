@@ -11,7 +11,9 @@ architecture TB of TB_system is
       rst : in std_logic;
       clk : in std_logic;
       RxD : in std_logic;
-      TxD : out std_logic
+      TxD : out std_logic;
+		leds	: out std_logic_vector(7 downto 0);
+		switches	: in std_logic_vector(3 downto 0)
       );  
   end component;
 
@@ -31,6 +33,8 @@ architecture TB of TB_system is
   signal ToFPGA   : std_logic;
   signal FromFPGA : std_logic;
   signal StartTX  : std_logic;
+  signal leds: std_logic_vector(7 downto 0);
+  signal switches: std_logic_vector(3 downto 0);
   
   
 begin
@@ -40,7 +44,9 @@ port map(
   rst => Rst,
   clk => Clk,
   RxD => ToFPGA,
-  TxD => FromFPGA
+  TxD => FromFPGA,
+  leds => leds,
+  switches => switches
 );
 
 

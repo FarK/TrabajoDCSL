@@ -116,10 +116,36 @@ architecture struct of system is
 	signal uart_dataOut : std_logic_vector (7 downto 0);
 	signal uart_DataIn : std_logic_Vector (7 downto 0);
 
+	-- IO2Uart interface
+	signal uart_out              : std_logic_vector (7 downto 0);
+	signal uart_in               : std_logic_vector (7 downto 0);    
+	signal uart_rd               : std_logic;
+	signal uart_wr               : std_logic;
+	signal uart_ready            : std_logic;
+
+	-- GPIO led
+	signal gpio_leds_out         : std_logic_vector (7 downto 0);
+	signal gpio_leds_in          : std_logic_vector (7 downto 0);    
+	signal gpio_leds_rd          : std_logic;
+	signal gpio_leds_wr          : std_logic;
+	signal gpio_leds_ready       : std_logic;
+
+	-- GPIO switches
+	signal gpio_switches_out     : std_logic_vector (7 downto 0);
+	signal gpio_switches_in      : std_logic_vector (7 downto 0);    
+	signal gpio_switches_rd      : std_logic;
+	signal gpio_switches_wr      : std_logic;
+	signal gpio_switches_ready   : std_logic;
+
+	signal switches8            : std_logic_vector(7 downto 0);
+
 	signal unconnected_databus2 : std_logic_vector (DATA_WIDTH - 1 downto 0);
 	constant fixed_zero_addr : std_logic_vector (ADDR_WIDTH - 1 downto 0):=(others =>'0');
 	constant fixed_zero_data : std_logic_vector (DATA_WIDTH - 1 downto 0):=(others =>'0');        
 begin
+	--switches8 <= ((7 downto 4) => '0', others => switches);
+	switches8(7 downto 4) <= (others => '0');
+	switches8(switches'range) <= switches;
 
 	nd <= memRd or memWr;
 
@@ -203,6 +229,35 @@ begin
 		rdy  => memReady,
 		we   => memWr);   
 
+	-- Peripheral Control
+	peripheralControl1 : peripheralControl port map(
+		-- CPU interface
+		cpu_in			=> IO2CPU_data,
+		cpu_out			=> CPU2IO_data,
+		cpu_rd			=> IORd,
+		cpu_wr			=> IOWr,
+		cpu_ready		=> IOReady,
+		deviceID		=> deviceID,
+		-- UART interface
+		uart_out		=> uart_out,
+		uart_in			=> uart_in,
+		uart_rd			=> uart_rd,
+		uart_wr			=> uart_wr,
+		uart_ready		=> uart_ready,
+		-- GPIO led
+		gpio_leds_out		=> gpio_leds_out,
+		gpio_leds_in		=> gpio_leds_in,
+		gpio_leds_rd		=> gpio_leds_rd,
+		gpio_leds_wr		=> gpio_leds_wr,
+		gpio_leds_ready		=> gpio_leds_ready,
+		-- GPIO switches
+		gpio_switches_out	=> gpio_switches_out,
+		gpio_switches_in	=> gpio_switches_in,
+		gpio_switches_rd	=> gpio_switches_rd,
+		gpio_switches_wr	=> gpio_switches_wr,
+		gpio_switches_ready	=> gpio_switches_ready
+	);
+
 	-- interface between IO ports of CPU and miniuart  
 	XIO2Uart :IO2Uart port map (
 		rst          => reset,
@@ -215,12 +270,12 @@ begin
 		uart_DataIn  => uart_DataIn, 
 		uart_DataOut => uart_dataOut,       
 		-- CPU interface
-		cpu_MBRin    => IO2CPU_data,
-		cpu_MBRout   => CPU2IO_data,  
-		cpu_rd       => IORd,
-		cpu_wr       => IOWr,
-		cpu_ready    => IOReady,    -- operation done
-		cpu_deviceID => deviceID ); -- device ID
+		data_out     => uart_out,
+		data_in      => uart_in,
+		rd           => uart_rd,
+		wr           => uart_wr,
+		ready        => uart_ready
+	);
 
 	-- UART
 	uart: miniUART port map (
@@ -235,17 +290,28 @@ begin
 		DataIn   => uart_DataIn, 
 		DataOut  => uart_dataOut);
 
-	-- GPIO
-	gpio_1: gpio port map (
-	      clk		=> clk,
-	      rst		=> rst,
-	      cpu_MBRin		=> IO2CPU_data,
-	      cpu_MBRout	=> CPU2IO_data,
-	      cpu_rd		=> IORd,
-	      cpu_wr		=> IOWr,
-	      cpu_ready		=> IOReady,
-	      cpu_deviceID	=> deviceID,
-	      leds		=> leds,
-	      switches		=> switches
+	-- GPIOs
+	gpio_leds: gpio port map (
+		clk		=> clk,
+		rst		=> rst,
+		data_in		=> gpio_leds_in,
+		data_out	=> gpio_leds_out,
+		rd		=> gpio_leds_rd,
+		wr		=> gpio_leds_wr,
+		ready		=> gpio_leds_ready,
+		peripheral_in	=> (others => '0'),
+		peripheral_out	=> leds
+	);
+
+	gpio_switches: gpio port map (
+		clk		=> clk,
+		rst		=> rst,
+		data_in		=> gpio_switches_in,
+		data_out	=> gpio_switches_out,
+		rd		=> gpio_switches_rd,
+		wr		=> gpio_switches_wr,
+		ready		=> gpio_switches_ready,
+		peripheral_in	=> switches8,
+		peripheral_out	=> open
 	);
 end architecture;

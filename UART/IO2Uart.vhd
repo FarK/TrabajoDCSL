@@ -63,12 +63,11 @@ entity IO2Uart is
 		uart_DataOut : in   std_logic_vector (7 downto 0);
 
 		-- CPU interface
-		cpu_MBRin   : out std_logic_vector (31 downto 0);
-		cpu_MBRout  : in std_logic_vector (31 downto 0);    
-		cpu_rd      : in std_logic;
-		cpu_wr      : in std_logic;
-		cpu_ready   : out std_logic;                     -- operation done
-		cpu_deviceID: in std_logic_vector (5 downto 0)
+		data_out   : out std_logic_vector (7 downto 0);
+		data_in  : in std_logic_vector (7 downto 0);    
+		rd      : in std_logic;
+		wr      : in std_logic;
+		ready   : out std_logic                     -- operation done
 	);
 end entity;
 
@@ -93,61 +92,59 @@ architecture behav of IO2Uart is
 begin
 	process (rst, clk)
 	begin
-		if(to_integer(unsigned(cpu_deviceID)) = UART_ID) then
-			if (rst = '1') then
-				state        <= idle;
-				uart_cs_n    <= '1';
-				uart_rd_n    <= '1';
-				uart_wr_n    <= '1';
-				uart_addr    <= "01"; -- read status
-				uart_DataIn  <= (others => '0');
-				cpu_MBRin    <= (others => '0');
-				cpu_ready    <= '0';
-			elsif (rising_edge (clk)) then
-				case  state is
-					when idle =>   
-						uart_cs_n    <= '1';
-						uart_rd_n    <= '1';
-						uart_wr_n    <= '1';         
-						uart_addr    <= "01";  -- read status  
-						cpu_ready    <= '0';            
-						if cpu_rd='1'  then    -- To read data from Uart : check data_available flag first
-							if uart_DataOut(2) = '1' then
-								state      <= reading1;
-								uart_addr  <= "00";  -- read data
-							end if;
-						elsif cpu_wr='1'  then  -- to write data to Uart : check Transmit buffer empty first
-							if uart_DataOut(3)= '1' then 
-								uart_wr_n    <= '0';
-								uart_cs_n    <= '0';
-								uart_DataIn  <= cpu_MBRout(7 downto 0);
-								state        <= writing1;
-							end if;
+		if (rst = '1') then
+			state        <= idle;
+			uart_cs_n    <= '1';
+			uart_rd_n    <= '1';
+			uart_wr_n    <= '1';
+			uart_addr    <= "01"; -- read status
+			uart_DataIn  <= (others => '0');
+			data_out    <= (others => '0');
+			ready    <= '0';
+		elsif (rising_edge (clk)) then
+			case  state is
+				when idle =>   
+					uart_cs_n    <= '1';
+					uart_rd_n    <= '1';
+					uart_wr_n    <= '1';         
+					uart_addr    <= "01";  -- read status  
+					ready    <= '0';            
+					if rd='1'  then    -- To read data from Uart : check data_available flag first
+						if uart_DataOut(2) = '1' then
+							state      <= reading1;
+							uart_addr  <= "00";  -- read data
 						end if;
-					when reading1 =>           -- Read data from Uart
-						uart_rd_n    <= '0';
-						uart_cs_n    <= '0';
-						cpu_MBRin             <= (others =>'0');
-						cpu_MBRin(7 downto 0) <= uart_DataOut;
-						state <= reading2;
-					when reading2 =>           -- Stop reading data from Uart and wait till cpu deasserts its read command
-						uart_rd_n   <= '1';
-						uart_cs_n   <= '1';
-						cpu_ready   <= '1';
-						if cpu_rd='0'  then
-							state  <= idle; 
-						end if;          
-					when writing1 =>
-						uart_wr_n    <= '1';
-						uart_cs_n    <= '1';
-						cpu_ready    <= '1';
-						if cpu_wr='0'  then
-							state   <= idle; 
+					elsif wr='1'  then  -- to write data to Uart : check Transmit buffer empty first
+						if uart_DataOut(3)= '1' then 
+							uart_wr_n    <= '0';
+							uart_cs_n    <= '0';
+							uart_DataIn  <= data_in;
+							state        <= writing1;
 						end if;
-					when others =>
-						state <= idle;       
-				end case;
-			end if;
+					end if;
+				when reading1 =>           -- Read data from Uart
+					uart_rd_n    <= '0';
+					uart_cs_n    <= '0';
+					data_out             <= (others =>'0');
+					data_out <= uart_DataOut;
+					state <= reading2;
+				when reading2 =>           -- Stop reading data from Uart and wait till cpu deasserts its read command
+					uart_rd_n   <= '1';
+					uart_cs_n   <= '1';
+					ready   <= '1';
+					if rd='0'  then
+						state  <= idle; 
+					end if;          
+				when writing1 =>
+					uart_wr_n    <= '1';
+					uart_cs_n    <= '1';
+					ready    <= '1';
+					if wr='0'  then
+						state   <= idle; 
+					end if;
+				when others =>
+					state <= idle;       
+			end case;
 		end if;
 	end process;
 end architecture;

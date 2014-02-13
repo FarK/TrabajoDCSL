@@ -373,27 +373,27 @@ component miniUART is
     DataOut  : out Std_Logic_Vector(7 downto 0)); -- 
 end component; 
 
-component IO2Uart
-  port (
-    rst : in std_logic;
-    clk : in std_logic;
+component IO2Uart is
+	port (
+		rst : in std_logic;
+		clk : in std_logic;
 
-    -- uart interface
-    uart_cs_n    : out std_logic;
-    uart_rd_n    : out std_logic;
-    uart_wr_n    : out std_logic;
-    uart_addr    : out  std_logic_vector (1 downto 0);
-    uart_DataIn  : out  std_logic_vector (7 downto 0);
-    uart_DataOut : in   std_logic_vector (7 downto 0);
-    
-    -- CPU interface
-    cpu_MBRin   : out std_logic_vector (31 downto 0);
-    cpu_MBRout  : in std_logic_vector (31 downto 0);    
-    cpu_rd      : in std_logic;
-    cpu_wr      : in std_logic;
-    cpu_ready   : out std_logic;                     -- operation done
-    cpu_deviceID: in std_logic_vector (5 downto 0)); -- device ID
-end component;  
+		-- uart interface
+		uart_cs_n    : out std_logic;
+		uart_rd_n    : out std_logic;
+		uart_wr_n    : out std_logic;
+		uart_addr    : out  std_logic_vector (1 downto 0);
+		uart_DataIn  : out  std_logic_vector (7 downto 0);
+		uart_DataOut : in   std_logic_vector (7 downto 0);
+
+		-- CPU interface
+		data_out   : out std_logic_vector (7 downto 0);
+		data_in  : in std_logic_vector (7 downto 0);    
+		rd      : in std_logic;
+		wr      : in std_logic;
+		ready   : out std_logic                     -- operation done
+	);
+end component;
 
 component memCtrl2 is
   port (
@@ -420,17 +420,48 @@ component gpio is
 		clk : in std_logic;
 		rst : in std_logic;
 
-		cpu_MBRin   : out std_logic_vector (31 downto 0);
-		cpu_MBRout  : in std_logic_vector (31 downto 0);    
-		cpu_rd      : in std_logic;
-		cpu_wr      : in std_logic;
-		cpu_ready   : out std_logic;                     -- operation done
-		cpu_deviceID: in std_logic_vector (5 downto 0);
+		data_in     : in std_logic_vector(7 downto 0);
+		data_out    : out std_logic_vector(7 downto 0);    
+		rd          : in std_logic;
+		wr          : in std_logic;
+		ready       : out std_logic;                     -- operation done
 
 		-- IO Registers
-		leds        : out std_logic_vector(7 downto 0);
-		switches    : in std_logic_vector(3 downto 0)
+		peripheral_in      : in std_logic_vector(7 downto 0);
+		peripheral_out     : out std_logic_vector(7 downto 0)
 	);
 end component;
 
+component peripheralControl is
+	port (
+		-- CPU interface
+		cpu_in    : out std_logic_vector (31 downto 0);
+		cpu_out   : in std_logic_vector (31 downto 0);    
+		cpu_rd    : in std_logic;
+		cpu_wr    : in std_logic;
+		cpu_ready : out std_logic;
+		deviceID  : in std_logic_vector (5 downto 0);
+
+		-- UART interface
+		uart_out              : in std_logic_vector (7 downto 0);
+		uart_in               : out std_logic_vector (7 downto 0);    
+		uart_rd               : out std_logic;
+		uart_wr               : out std_logic;
+		uart_ready            : in std_logic;
+
+		-- GPIO led
+		gpio_leds_out         : in std_logic_vector (7 downto 0);
+		gpio_leds_in          : out std_logic_vector (7 downto 0);    
+		gpio_leds_rd          : out std_logic;
+		gpio_leds_wr          : out std_logic;
+		gpio_leds_ready       : in std_logic;
+
+		-- GPIO switches
+		gpio_switches_out     : in std_logic_vector (7 downto 0);
+		gpio_switches_in      : out std_logic_vector (7 downto 0);    
+		gpio_switches_rd      : out std_logic;
+		gpio_switches_wr      : out std_logic;
+		gpio_switches_ready   : in std_logic
+	);
+end component;
 END package;

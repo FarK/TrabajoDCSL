@@ -10,16 +10,15 @@ entity gpio is
 		clk : in std_logic;
 		rst : in std_logic;
 
-		cpu_MBRin   : out std_logic_vector (31 downto 0);
-		cpu_MBRout  : in std_logic_vector (31 downto 0);    
-		cpu_rd      : in std_logic;
-		cpu_wr      : in std_logic;
-		cpu_ready   : out std_logic;                     -- operation done
-		cpu_deviceID: in std_logic_vector (5 downto 0);
+		data_in     : in std_logic_vector(7 downto 0);
+		data_out    : out std_logic_vector(7 downto 0);    
+		rd          : in std_logic;
+		wr          : in std_logic;
+		ready       : out std_logic;                     -- operation done
 
 		-- IO Registers
-		leds        : out std_logic_vector(7 downto 0);
-		switches    : in std_logic_vector(3 downto 0)
+		peripheral_in      : in std_logic_vector(7 downto 0);
+		peripheral_out     : out std_logic_vector(7 downto 0)
 	);
 end entity;
 
@@ -27,21 +26,17 @@ architecture behavioral of gpio is
 begin
 	process (rst, clk)
 	begin
+		ready <= '1';
+
 		if rst='1' then
-			leds <= (leds'range => '0');
-			cpu_ready <= '0';
+			peripheral_out <= (peripheral_out'range => '0');
 		elsif rising_edge(clk) then
-			cpu_ready <= '0';
-			case (to_integer(unsigned(cpu_deviceID))) is
-				when GPIO_LEDS_ID =>
-					leds <= cpu_MBRout(7 downto 0);
-					cpu_ready <= '1';
-				when GPIO_SWITCHES_ID =>
-					cpu_MBRin(3 downto 0) <= switches;
-					cpu_ready <= '1';
-				when others =>
-					cpu_ready <= '0';
-			end case;
+			if rd = '1' then
+				data_out <= peripheral_in;
+			end if;
+			if wr = '1' then
+				peripheral_out <= data_in;
+			end if;
 		end if;
 	end process;
 end architecture;
