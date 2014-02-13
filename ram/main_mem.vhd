@@ -55,8 +55,8 @@ entity main_mem is
   	we: IN std_logic);
   	
 	-- XST attributes
-  attribute incremental_synthesis : string;
-  attribute incremental_synthesis of main_mem : entity is "yes";
+ -- attribute incremental_synthesis : string;
+  --attribute incremental_synthesis of main_mem : entity is "yes";
 end entity;
 
 architecture struct of main_mem is
